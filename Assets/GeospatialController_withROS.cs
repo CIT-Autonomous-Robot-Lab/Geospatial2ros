@@ -40,8 +40,11 @@ namespace Google.XR.ARCoreExtensions.Samples.Geospatial
     using Google.XR.ARCoreExtensions;
     
     using Unity.Robotics.ROSTCPConnector;
-    using NavSatFixMsg = RosMessageTypes.Sensor.NavSatFixMsg;
-    using PoseMsg = RosMessageTypes.Geometry.PoseMsg;
+    //using NavSatFixMsg = RosMessageTypes.Sensor.NavSatFixMsg;
+    using GeospatialApiMsg = RosMessageTypes.GeospatialApi.GeospatialApiMsg;
+    using HeaderMsg = RosMessageTypes.Std.HeaderMsg;
+    //using TimeMsg = RosMessageTypes.BuiltinInterfaces.TimeMsg;
+    //using PoseMsg = RosMessageTypes.Geometry.PoseMsg;
 
     using System.Text.RegularExpressions;
     using System.Net.Sockets;
@@ -65,11 +68,15 @@ namespace Google.XR.ARCoreExtensions.Samples.Geospatial
 
 
         [SerializeField] string topicName_fix = "fix";
-        [SerializeField] string topicName_quat = "quat";
+        //[SerializeField] string topicName_quat = "quat";
 
         private ROSConnection ros;
-        private NavSatFixMsg NavSatFixMessage = new NavSatFixMsg();
-        private PoseMsg PoseMessage = new PoseMsg();
+        //private NavSatFixMsg NavSatFixMessage = new NavSatFixMsg();
+        private GeospatialApiMsg GeospatialApiMessage = new GeospatialApiMsg();
+        private HeaderMsg HeaderMessage = new HeaderMsg();
+        //private TimeMsg TimeMessage = new TimeMsg();
+        
+        //private PoseMsg PoseMessage = new PoseMsg();
 
 
         [Header("AR Components")]
@@ -185,8 +192,9 @@ namespace Google.XR.ARCoreExtensions.Samples.Geospatial
 
                     ros = ROSConnection.GetOrCreateInstance();
                     ros.ConnectOnStart = false;
-                    ros.RegisterPublisher<NavSatFixMsg>(topicName_fix);
-                    ros.RegisterPublisher<PoseMsg>(topicName_quat);
+                    //ros.RegisterPublisher<NavSatFixMsg>(topicName_fix);
+                    ros.RegisterPublisher<GeospatialApiMsg>(topicName_fix);
+                    //ros.RegisterPublisher<PoseMsg>(topicName_quat);
 
                 }
                 ros.RosIPAddress = PlayerPrefs.GetString(_myKey_IP);
@@ -560,23 +568,25 @@ namespace Google.XR.ARCoreExtensions.Samples.Geospatial
 
                     text_status.text = "ROS sending.";
 
-                    NavSatFixMessage.latitude = pose.Latitude;
-                    NavSatFixMessage.longitude = pose.Longitude;
-                    NavSatFixMessage.altitude = pose.Altitude;
-                    NavSatFixMessage.header.frame_id = "gps";
+                    //NavSatFixMessage.latitude = pose.Latitude;
+                    //NavSatFixMessage.longitude = pose.Longitude;
+                    //NavSatFixMessage.altitude = pose.Altitude;
+                    //NavSatFixMessage.header.frame_id = "gps";
+                    //GeospatialApiMessage.header.stamp = var sec = Math.Floor(timeInSeconds);
+                    GeospatialApiMessage.latitude = Math.Round(pose.Latitude, 14);
+                    GeospatialApiMessage.longitude = Math.Round(pose.Longitude, 14);
+                    GeospatialApiMessage.altitude = Math.Round(pose.Altitude, 5);
+                    GeospatialApiMessage.heading = Math.Round(pose.Heading, 5);
+                    GeospatialApiMessage.horizontal_accuracy = Math.Round(pose.HorizontalAccuracy, 5);
+                    GeospatialApiMessage.vertical_accuracy = Math.Round(pose.VerticalAccuracy, 5);
+                    GeospatialApiMessage.heading_accuracy = Math.Round(pose.HeadingAccuracy, 5);
+                    //GeospatialApiMessage.position_covariance = new double[9];
+                    //GeospatialApiMessage.position_covariance_type = 0;
+                    GeospatialApiMessage.header.frame_id = "vps";
 
-                    Quaternion tmppose = Quaternion.Euler(0.0f, (float)pose.Heading, 0.0f);
-                    PoseMessage.orientation.x = tmppose.x;
-                    PoseMessage.orientation.y = tmppose.y;
-                    PoseMessage.orientation.z = tmppose.z;
-                    PoseMessage.orientation.w = tmppose.w;
-
-                    //ros.Send(topicName_fix, NavSatFixMessage);
-                    //ros.Send(topicName_quat, PoseMessage);
-
-
-                    ros.Publish(topicName_fix, NavSatFixMessage);
-                    ros.Publish(topicName_quat, PoseMessage);
+                    //ros.Publish(topicName_fix, NavSatFixMessage);
+                    ros.Publish(topicName_fix, GeospatialApiMessage);
+                    //ros.Publish(topicName_quat, PoseMessage);
 
                     if_log.text = "ROS pub: " + pose.Latitude.ToString("f5") + ", " + pose.Longitude.ToString("f5") + ", " + pose.Altitude.ToString("f5") + ", " + pose.Heading.ToString("f5") + "\n" + if_log.text;
                 }
